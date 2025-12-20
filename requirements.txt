@@ -1,0 +1,9 @@
+flask
+flask-socketio
+flask-sqlalchemy
+python-dotenv
+pyjwt
+passlib[bcrypt]
+psycopg[binary]
+confluent-kafka
+eventlet
