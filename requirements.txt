@@ -4,6 +4,6 @@ flask-sqlalchemy
 python-dotenv
 pyjwt
 passlib[bcrypt]
-psycopg[binary]
+psycopg2-binary
 confluent-kafka
 eventlet
