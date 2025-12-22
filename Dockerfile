@@ -5,26 +5,26 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+# IMPORTANT: allow top-level imports (app, auth, web)
+ENV PYTHONPATH=/app
+
 # Set working directory inside container
 WORKDIR /app
 
-# System dependencies:
-# - libpq-dev for Postgres client libs (psycopg)
-# - gcc for building some Python wheels if needed
+# System dependencies (Postgres + optional wheel builds)
 RUN apt-get update \
     && apt-get install -y --no-install-recommends gcc libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies first (better Docker layer caching)
-COPY requirements.txt ./requirements.txt
+# Install Python dependencies first (better caching)
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy your application code
-COPY app ./app
+# Copy ALL project code (app, auth, web, etc.)
+COPY . .
 
-# Expose Flask port (container-side)
+# Expose Flask port
 EXPOSE 5000
 
-# Run the Flask app automatically when container starts
-# Assumes you have app/main.py with `app = Flask(__name__)`
+# Run Flask app
 CMD ["python", "-m", "app.main"]
