@@ -2,8 +2,8 @@ from app.services.matchmaking_service import MatchmakingService
 from app.models.matchmaking_event import MatchmakingEvent
 from app.models.player import Player
 from app.models.game_mode import GameMode
-from app.util.topic_resolver import TopicResolver
-from app.util.kafka_producer import KafkaProducerClient
+from app.kafka.topic_resolver import TopicResolver
+from app.kafka.producer import KafkaProducerClient
 
 
 class MatchmakingServiceImpl(MatchmakingService):

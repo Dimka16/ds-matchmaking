@@ -8,3 +8,4 @@ psycopg2-binary
 confluent-kafka
 eventlet
 marshmallow
+kafka
