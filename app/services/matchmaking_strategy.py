@@ -43,3 +43,9 @@ class MatchmakingStrategy(ABC):
                 - None if no match can be formed at this time
         """
         pass
+
+    @abstractmethod
+    def remove_player(self, player_id: int) -> None:
+        """Remove a player from the waiting pool by id."""
+        pass
+

@@ -1,31 +1,44 @@
-import uuid
+from dataclasses import dataclass
+from typing import Any
 import time
-from app.models.player import Player
-from app.models.game_mode import GameMode
+import uuid
 
-
+@dataclass
 class MatchmakingEvent:
-    def __init__(
-            self,
-            player: Player,
-            game_mode: GameMode,
-            timestamp: int | None = None,
-            event_id: str | None = None
-    ):
-        self.event_id = event_id or str(uuid.uuid4())
-        self.player = player
-        self.game_mode = game_mode
-        self.timestamp = timestamp or int(time.time())
+    player: Any
+    game_mode: Any
+    action: str = "join"
+    event_id: str = ""
+    timestamp: float = 0.0
 
-    def to_dict(self):
+    def __post_init__(self):
+        if not self.event_id:
+            self.event_id = str(uuid.uuid4())
+        if not self.timestamp:
+            self.timestamp = time.time()
+
+    def to_dict(self) -> dict:
+        # game_mode might be Enum
+        gm = self.game_mode.value if hasattr(self.game_mode, "value") else self.game_mode
+
+        # player might be Player object
+        if hasattr(self.player, "to_dict"):
+            p = self.player.to_dict()
+        elif isinstance(self.player, dict):
+            p = self.player
+        else:
+            # last resort
+            p = {
+                "player_id": getattr(self.player, "player_id", None),
+                "username": getattr(self.player, "username", None),
+                "elo": getattr(self.player, "elo", None),
+                "region": getattr(self.player, "region", None),
+            }
+
         return {
             "event_id": self.event_id,
-            "player": {
-                "player_id": self.player.player_id,
-                "username": self.player.username,
-                "elo": self.player.elo,
-                "region": self.player.region
-            },
-            "game_mode": self.game_mode.value,
-            "timestamp": self.timestamp
+            "timestamp": self.timestamp,
+            "action": self.action,
+            "game_mode": gm,
+            "player": p,
         }

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Matchmaking Dashboard</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+</head>
+
+<body class="bg-body-tertiary">
+<nav class="navbar navbar-expand-lg bg-white border-bottom">
+    <div class="container">
+        <span class="navbar-brand fw-semibold">DS Matchmaking</span>
+        <div class="ms-auto d-flex gap-2 align-items-center">
+            <span class="badge text-bg-secondary" id="authStatus">Not logged in</span>
+            <button class="btn btn-outline-secondary btn-sm" id="btnLogout" disabled>Logout</button>
+        </div>
+    </div>
+</nav>
+
+<main class="container my-4">
+    <div class="row g-3">
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold">Auth</span>
+                        <span class="text-muted small">/auth/register, /auth/login</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Username</label>
+                            <input class="form-control" id="username" placeholder="user1" autocomplete="username"/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Password</label>
+                            <input class="form-control" id="password" type="password" placeholder="••••••••"
+                                   autocomplete="current-password"/>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-3">
+                        <button class="btn btn-primary" id="btnRegister">Register</button>
+                        <button class="btn btn-success" id="btnLogin">Login</button>
+                    </div>
+
+                    <hr class="my-4"/>
+
+                    <label class="form-label">JWT Token (stored in browser)</label>
+                    <textarea class="form-control font-monospace" id="token" rows="3"
+                              placeholder="Will appear here after login"></textarea>
+                    <div class="form-text">Used automatically for protected endpoints (Authorization: Bearer ...).</div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold">Matchmaking</span>
+                        <span class="text-muted small">/matchmaking/join, /matchmaking/leave</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Game mode</label>
+                            <select class="form-select" id="gameMode">
+                                <option value="classic">classic</option>
+                                <option value="solo">solo</option>
+                                <option value="duo">duo</option>
+                                <option value="tournament">tournament</option>
+                                <option value="blitz">blitz</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">ELO</label>
+                            <input class="form-control" id="elo" type="number" value="1400" min="0"/>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Region</label>
+                            <select class="form-select" id="region">
+                                <option value="EUROPE" selected>Europe</option>
+                                <option value="NORTH_AMERICA">North America</option>
+                                <option value="SOUTH_AMERICA">South America</option>
+                                <option value="ASIA">Asia</option>
+                                <option value="AFRICA">Africa</option>
+                                <option value="AUSTRALIA(OCEANIA)">Australia (Oceania)</option>
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button class="btn btn-outline-primary" id="btnJoin">Join queue</button>
+                        <button class="btn btn-outline-danger" id="btnLeave">Leave queue</button>
+                    </div>
+
+                    <div class="alert alert-info mt-3 mb-0 small">
+                        Tip: open this page in two windows, login as 2 users, join same mode → worker should emit <code>match_found</code>.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold">Sessions</span>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-secondary" id="btnRefreshSessions">Refresh</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-8">
+                            <label class="form-label">Selected session ID</label>
+                            <input class="form-control font-monospace" id="sessionId"
+                                   placeholder="Click a session from the list below"/>
+                        </div>
+                        <div class="col-md-4 d-grid">
+                            <button class="btn btn-outline-primary" id="btnGetSession">Get session details</button>
+                        </div>
+                    </div>
+
+                    <hr class="my-3"/>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="fw-semibold mb-2">My sessions</div>
+                            <div class="list-group" id="sessionsList"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fw-semibold mb-2">Session details</div>
+                            <pre class="bg-light border rounded p-2 small" id="sessionDetails"
+                                 style="min-height: 220px;"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold">Live Events (Socket.IO)</span>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-success" id="btnConnect">Connect</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="btnRegisterSocket">Register player room
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="form-text mb-2">
+                        Connect, then “Register player room” to receive <code>match_found</code>.
+                    </div>
+                    <pre class="bg-dark text-light rounded p-2 small" id="eventsLog" style="min-height: 200px;"></pre>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold">Recent System Events</span>
+                    <button class="btn btn-sm btn-outline-secondary" id="btnRefreshEvents">Refresh</button>
+                </div>
+                <div class="card-body">
+                    <pre class="bg-light border rounded p-2 small" id="systemEvents" style="min-height: 180px;"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <span class="fw-semibold">API Response</span>
+            </div>
+            <div class="card-body">
+                <pre class="bg-light border rounded p-2 small" id="apiOut" style="min-height: 120px;"></pre>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>
