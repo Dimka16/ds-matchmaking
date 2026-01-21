@@ -1,4 +1,5 @@
 from app import create_app
+from app.socketio_ext import socketio
 
 app = create_app()
 
@@ -9,5 +10,4 @@ def health():
 
 
 if __name__ == "__main__":
-    # IMPORTANT: host must be 0.0.0.0 so Docker can expose it
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)

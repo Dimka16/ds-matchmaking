@@ -4,3 +4,11 @@ class Player:
         self.username = username
         self.elo = elo
         self.region = region
+
+    def to_dict(self) -> dict:
+        return {
+            "player_id": self.player_id,
+            "username": self.username,
+            "elo": self.elo,
+            "region": self.region,
+        }

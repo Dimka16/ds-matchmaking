@@ -4,7 +4,9 @@ from app.models.game_mode import GameMode
 class TopicResolver:
     _TOPIC_MAP = {
         GameMode.CLASSIC: "match.classic",
+        GameMode.SOLO: "match.solo",
         GameMode.DUO: "match.duo",
+        GameMode.BLITZ: "match.blitz",
         GameMode.TOURNAMENT: "match.tournament",
     }
 

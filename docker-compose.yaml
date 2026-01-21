@@ -54,7 +54,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
     volumes:
       - kafka_data:/var/lib/kafka/data
     healthcheck:
@@ -80,6 +80,21 @@ services:
       # Kafka UI should use INTERNAL listener (within Docker network)
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka:${KAFKA_INTERNAL_PORT:-9092}"
 
+  kafka-init:
+    image: apache/kafka:3.7.0
+    container_name: kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: [ "/bin/bash", "-lc" ]
+    command: >
+      "/opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic match.classic --partitions ${KAFKA_TOPIC_PARTITIONS:-3} --replication-factor 1 &&
+         /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic match.solo --partitions ${KAFKA_TOPIC_PARTITIONS:-3} --replication-factor 1 &&
+         /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic match.duo --partitions ${KAFKA_TOPIC_PARTITIONS:-3} --replication-factor 1 &&
+         /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic match.blitz --partitions ${KAFKA_TOPIC_PARTITIONS:-3} --replication-factor 1 &&
+         /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic match.tournament --partitions ${KAFKA_TOPIC_PARTITIONS:-3} --replication-factor 1"
+    restart: "no"
+
   # -------------------------
   # Flask API (builds from Dockerfile in repo root)
   # Starts automatically because Dockerfile has CMD
@@ -99,6 +114,91 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+
+  worker-classic:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: worker-classic
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      WORKER_MODE: classic
+    depends_on:
+      kafka:
+        condition: service_healthy
+      api:
+        condition: service_started
+    command: [ "python", "-m", "app.workers.run_worker" ]
+
+  worker-solo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: worker-solo
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      WORKER_MODE: solo
+    depends_on:
+      kafka:
+        condition: service_healthy
+      api:
+        condition: service_started
+    command: [ "python", "-m", "app.workers.run_worker" ]
+
+  worker-duo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: worker-duo
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      WORKER_MODE: duo
+    depends_on:
+      kafka:
+        condition: service_healthy
+      api:
+        condition: service_started
+    command: [ "python", "-m", "app.workers.run_worker" ]
+
+  worker-tournament:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: worker-tournament
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      WORKER_MODE: tournament
+    depends_on:
+      kafka:
+        condition: service_healthy
+      api:
+        condition: service_started
+    command: [ "python", "-m", "app.workers.run_worker" ]
+
+  worker-blitz:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: worker-blitz
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      WORKER_MODE: blitz
+    depends_on:
+      kafka:
+        condition: service_healthy
+      api:
+        condition: service_started
+    command: [ "python", "-m", "app.workers.run_worker" ]
 
 volumes:
   postgres_data:

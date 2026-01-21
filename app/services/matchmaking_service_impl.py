@@ -1,31 +1,14 @@
-from app.services.matchmaking_service import MatchmakingService
+# app/services/matchmaking_service_impl.py
 from app.models.matchmaking_event import MatchmakingEvent
-from app.models.player import Player
-from app.models.game_mode import GameMode
 from app.kafka.topic_resolver import TopicResolver
-from app.kafka.producer import KafkaProducerClient
 
-
-class MatchmakingServiceImpl(MatchmakingService):
-
-    def __init__(self, kafka_producer: KafkaProducerClient):
+class MatchmakingServiceImpl:
+    def __init__(self, kafka_producer):
         self._kafka_producer = kafka_producer
 
-    def enqueue_player(
-            self,
-            player: Player,
-            game_mode: GameMode
-    ) -> MatchmakingEvent:
-        event = MatchmakingEvent(
-            player=player,
-            game_mode=game_mode
-        )
-
+    def enqueue_player(self, player, game_mode, action="join"):
+        event = MatchmakingEvent(player=player, game_mode=game_mode, action=action)
         topic = TopicResolver.resolve(game_mode)
 
-        self._kafka_producer.send(
-            topic=topic,
-            message=event.to_dict()
-        )
-
+        self._kafka_producer.send(topic=topic, message=event.to_dict())
         return event

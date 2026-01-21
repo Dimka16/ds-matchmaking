@@ -1,5 +1,3 @@
-
-
 from typing import List
 from app.models.player import Player
 from app.models.game_mode import GameMode
