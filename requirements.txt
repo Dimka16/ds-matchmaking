@@ -11,3 +11,8 @@ passlib[bcrypt]
 psycopg2-binary
 requests
 sqlalchemy
+python-dotenv
+setuptools
+python-socketio[client]==5.15.1
+requests==2.32.5
+python-dotenv==1.2.1
